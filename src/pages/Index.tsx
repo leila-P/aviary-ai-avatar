@@ -71,8 +71,8 @@ const Index = () => {
                   muted
                   playsInline
                 >
-                  {/* در پیاده سازی واقعی، URL ویدئوی معرفی */}
-                  <source src="data:video/mp4;base64," type="video/mp4" />
+                  {/* استفاده از ویدئوی نمونه - در پیاده سازی واقعی URL ویدئوی شما را قرار دهید */}
+                  <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
                   {/* Fallback content */}
                   <div className="w-full h-full bg-gradient-to-br from-blue-900 via-purple-900 to-cyan-900 flex items-center justify-center">
                     <div className="text-center text-white">
