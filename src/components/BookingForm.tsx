@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, User, MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { fa } from 'date-fns/locale';
 
 interface BookingData {
   origin: string;
@@ -169,7 +167,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ onBookingSubmit, isVisible })
                       <Button variant="outline" className="w-full justify-start text-left">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {bookingData.departureDate ? (
-                          format(bookingData.departureDate, "PPP", { locale: fa })
+                          format(bookingData.departureDate, "PPP")
                         ) : (
                           <span>انتخاب تاریخ</span>
                         )}
@@ -194,7 +192,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ onBookingSubmit, isVisible })
                         <Button variant="outline" className="w-full justify-start text-left">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {bookingData.returnDate ? (
-                            format(bookingData.returnDate, "PPP", { locale: fa })
+                            format(bookingData.returnDate, "PPP")
                           ) : (
                             <span>انتخاب تاریخ</span>
                           )}
@@ -311,12 +309,12 @@ const BookingForm: React.FC<BookingFormProps> = ({ onBookingSubmit, isVisible })
                 </div>
                 <div className="flex justify-between">
                   <span>تاریخ رفت:</span>
-                  <span>{bookingData.departureDate ? format(bookingData.departureDate, "PPP", { locale: fa }) : '-'}</span>
+                  <span>{bookingData.departureDate ? format(bookingData.departureDate, "PPP") : '-'}</span>
                 </div>
                 {bookingData.tripType === 'roundTrip' && (
                   <div className="flex justify-between">
                     <span>تاریخ برگشت:</span>
-                    <span>{bookingData.returnDate ? format(bookingData.returnDate, "PPP", { locale: fa }) : '-'}</span>
+                    <span>{bookingData.returnDate ? format(bookingData.returnDate, "PPP") : '-'}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
