@@ -11,9 +11,11 @@ const Index = () => {
   const [isListening, setIsListening] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [userDetected, setUserDetected] = useState(false);
+  const [conversationStarted, setConversationStarted] = useState(false);
 
   const handleUserDetected = () => {
     setUserDetected(true);
+    setConversationStarted(true);
     toast({
       title: "خوش آمدید!",
       description: "آیا می‌خواهید بلیط هواپیما رزرو کنید؟",
@@ -23,6 +25,9 @@ const Index = () => {
 
   const handleToggleListening = () => {
     setIsListening(!isListening);
+    if (!conversationStarted) {
+      setConversationStarted(true);
+    }
   };
 
   const handleBookingRequest = () => {
@@ -53,89 +58,122 @@ const Index = () => {
         <div className="floating-orb absolute bottom-20 right-20 w-28 h-28 bg-pink-500/20 rounded-full blur-xl" style={{ animationDelay: '-1s' }}></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* هدر */}
-        <header className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent mb-4">
-            دستیار هوش مصنوعی پرواز
-          </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            با استفاده از آواتار هوش مصنوعی، راحت‌ترین روش رزرو بلیط هواپیما را تجربه کنید
-          </p>
-        </header>
-
-        {/* محتوای اصلی */}
-        <div className="max-w-7xl mx-auto">
-          {!showBookingForm ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              {/* آواتار */}
-              <div className="flex justify-center">
-                <Avatar
-                  onUserDetected={handleUserDetected}
-                  isListening={isListening}
-                  onToggleListening={handleToggleListening}
-                />
-              </div>
-
-              {/* چت */}
-              <div className="space-y-6">
-                <VoiceChat
-                  isListening={isListening}
-                  onToggleListening={handleToggleListening}
-                  onBookingRequest={handleBookingRequest}
-                />
-
-                {/* اطلاعات اضافی */}
-                <Card className="glass-effect p-6">
-                  <h3 className="text-lg font-semibold mb-4 text-blue-400">
-                    قابلیت‌های دستیار هوش مصنوعی
-                  </h3>
-                  <ul className="space-y-2 text-gray-300">
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                      گفتگوی صوتی طبیعی به زبان فارسی
-                    </li>
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                      تشخیص خودکار حضور کاربر
-                    </li>
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                      راهنمایی کامل در فرآیند رزرو
-                    </li>
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                      مقایسه قیمت‌ها و پیشنهاد بهترین گزینه‌ها
-                    </li>
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                      پشتیبانی ۲۴ ساعته
-                    </li>
-                  </ul>
-                </Card>
-
-                {userDetected && !isListening && (
-                  <Card className="glass-effect p-6 border border-blue-500/50">
-                    <div className="text-center">
-                      <h3 className="text-lg font-semibold mb-2 text-blue-400">
-                        آماده شروع هستید؟
-                      </h3>
-                      <p className="text-gray-300 mb-4">
-                        برای شروع گفتگو با دستیار هوش مصنوعی، روی دکمه زیر کلیک کنید
+      <div className="relative z-10">
+        {!showBookingForm ? (
+          <>
+            {!conversationStarted ? (
+              // ویدئوی معرفی تمام عرض
+              <div className="w-full h-screen relative">
+                <video
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                >
+                  {/* در پیاده سازی واقعی، URL ویدئوی معرفی */}
+                  <source src="data:video/mp4;base64," type="video/mp4" />
+                  {/* Fallback content */}
+                  <div className="w-full h-full bg-gradient-to-br from-blue-900 via-purple-900 to-cyan-900 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <div className="w-32 h-32 mx-auto mb-8 rounded-full bg-white/20 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-white/40"></div>
+                      </div>
+                      <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                        دستیار هوش مصنوعی پرواز
+                      </h1>
+                      <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                        با استفاده از آواتار هوش مصنوعی، راحت‌ترین روش رزرو بلیط هواپیما را تجربه کنید
                       </p>
-                      <Button
-                        onClick={handleToggleListening}
-                        className="bg-blue-600 hover:bg-blue-700 px-8 py-3"
-                        size="lg"
-                      >
-                        شروع گفتگو
-                      </Button>
                     </div>
-                  </Card>
-                )}
+                  </div>
+                </video>
+                
+                {/* دکمه شروع گفتگو */}
+                <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+                  <Button
+                    onClick={handleToggleListening}
+                    className="bg-blue-600 hover:bg-blue-700 px-12 py-4 text-lg font-semibold shadow-2xl"
+                    size="lg"
+                  >
+                    شروع گفتگو
+                  </Button>
+                </div>
+
+                {/* آواتار مخفی برای تشخیص کاربر */}
+                <div className="absolute top-0 left-0 opacity-0 pointer-events-none">
+                  <Avatar
+                    onUserDetected={handleUserDetected}
+                    isListening={isListening}
+                    onToggleListening={handleToggleListening}
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
+            ) : (
+              // حالت گفتگو
+              <div className="container mx-auto px-4 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start max-w-7xl mx-auto">
+                  {/* آواتار با ویدئوی گفتگو */}
+                  <div className="flex justify-center">
+                    <div className="relative w-full max-w-md mx-auto">
+                      <Card className="glass-effect p-6">
+                        <div className="relative">
+                          {/* ویدئوی گفتگو */}
+                          <div className="relative w-80 h-80 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-1">
+                            <div className="w-full h-full rounded-full overflow-hidden bg-gray-900">
+                              <video
+                                className="w-full h-full object-cover"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                              >
+                                {/* ویدئوی گفتگو */}
+                                <source src="data:video/mp4;base64," type="video/mp4" />
+                                {/* Fallback avatar */}
+                                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                  <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center">
+                                    <div className="w-16 h-16 rounded-full bg-white/40"></div>
+                                  </div>
+                                </div>
+                              </video>
+                            </div>
+                          </div>
+
+                          {/* وضعیت آواتار */}
+                          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                            <div className="px-4 py-2 rounded-full text-xs font-medium bg-green-500 text-white">
+                              آماده گفتگو
+                            </div>
+                          </div>
+
+                          {/* نشانگر گوش دادن */}
+                          {isListening && (
+                            <div className="absolute top-4 right-4">
+                              <div className="pulse-animation bg-red-500 rounded-full p-2">
+                                <div className="w-4 h-4 bg-white rounded-full"></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    </div>
+                  </div>
+
+                  {/* چت */}
+                  <div className="space-y-6">
+                    <VoiceChat
+                      isListening={isListening}
+                      onToggleListening={handleToggleListening}
+                      onBookingRequest={handleBookingRequest}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="container mx-auto px-4 py-8">
             <div className="max-w-4xl mx-auto">
               <BookingForm
                 onBookingSubmit={handleBookingSubmit}
@@ -152,8 +190,8 @@ const Index = () => {
                 </Button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* فوتر */}
