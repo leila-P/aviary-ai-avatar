@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,14 @@ interface VoiceChatProps {
   onBookingRequest: () => void;
 }
 
+interface BookingRequirements {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  passengers: string;
+  passengerName: string;
+}
+
 const VoiceChat: React.FC<VoiceChatProps> = ({ 
   isListening, 
   onToggleListening, 
@@ -33,7 +40,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
   ]);
   
   const [isPlaying, setIsPlaying] = useState(true);
-  const [transcript, setTranscript] = useState('');
+  const [bookingInfo, setBookingInfo] = useState<Partial<BookingRequirements>>({});
+  const [waitingForInfo, setWaitingForInfo] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -92,48 +100,159 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
 
     setMessages(prev => [...prev, userMessage]);
 
-    // پردازش درخواست کاربر
-    processUserRequest(speechText);
+    // اگر منتظر اطلاعات خاصی هستیم
+    if (waitingForInfo) {
+      handleSpecificInfo(speechText, waitingForInfo);
+    } else {
+      processUserRequest(speechText);
+    }
+  };
+
+  const handleSpecificInfo = (speechText: string, infoType: string) => {
+    const lowerInput = speechText.toLowerCase();
+    
+    switch (infoType) {
+      case 'origin':
+        if (detectCity(lowerInput)) {
+          setBookingInfo(prev => ({ ...prev, origin: speechText }));
+          setWaitingForInfo(null);
+          askForNextRequiredInfo();
+        } else {
+          askAgainForInfo('origin', 'لطفاً نام شهر مبدأ را واضح‌تر بگویید. مثل تهران، اصفهان، شیراز');
+        }
+        break;
+      case 'destination':
+        if (detectCity(lowerInput)) {
+          setBookingInfo(prev => ({ ...prev, destination: speechText }));
+          setWaitingForInfo(null);
+          askForNextRequiredInfo();
+        } else {
+          askAgainForInfo('destination', 'لطفاً نام شهر مقصد را واضح‌تر بگویید.');
+        }
+        break;
+      case 'departureDate':
+        if (detectDate(lowerInput)) {
+          setBookingInfo(prev => ({ ...prev, departureDate: speechText }));
+          setWaitingForInfo(null);
+          askForNextRequiredInfo();
+        } else {
+          askAgainForInfo('departureDate', 'لطفاً تاریخ پرواز را مشخص کنید. مثل فردا، دوشنبه، یا ۱۵ آذر');
+        }
+        break;
+      case 'passengers':
+        if (detectPassengerCount(lowerInput)) {
+          setBookingInfo(prev => ({ ...prev, passengers: speechText }));
+          setWaitingForInfo(null);
+          askForNextRequiredInfo();
+        } else {
+          askAgainForInfo('passengers', 'لطفاً تعداد مسافران را مشخص کنید. مثل یک نفر، دو نفر');
+        }
+        break;
+      case 'passengerName':
+        setBookingInfo(prev => ({ ...prev, passengerName: speechText }));
+        setWaitingForInfo(null);
+        completeBookingProcess();
+        break;
+    }
+  };
+
+  const detectCity = (text: string): boolean => {
+    const cities = ['تهران', 'اصفهان', 'شیراز', 'مشهد', 'تبریز', 'اهواز', 'کرج', 'قم'];
+    return cities.some(city => text.includes(city));
+  };
+
+  const detectDate = (text: string): boolean => {
+    const dateKeywords = ['فردا', 'امروز', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه', 'یکشنبه', 'آذر', 'دی', 'بهمن'];
+    return dateKeywords.some(keyword => text.includes(keyword)) || /\d+/.test(text);
+  };
+
+  const detectPassengerCount = (text: string): boolean => {
+    const countKeywords = ['یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'نفر', '۱', '۲', '۳', '۴', '۵', '۶'];
+    return countKeywords.some(keyword => text.includes(keyword)) || /\d+/.test(text);
+  };
+
+  const askForNextRequiredInfo = () => {
+    const requiredFields = [
+      { key: 'origin', question: 'از کدام شهر می‌خواهید سفر کنید؟' },
+      { key: 'destination', question: 'به کدام شهر می‌خواهید سفر کنید؟' },
+      { key: 'departureDate', question: 'تاریخ پرواز چه روزی باشد؟' },
+      { key: 'passengers', question: 'چند نفر قرار است سفر کنید؟' },
+      { key: 'passengerName', question: 'نام مسافر چیست؟' }
+    ];
+
+    for (const field of requiredFields) {
+      if (!bookingInfo[field.key as keyof BookingRequirements]) {
+        setWaitingForInfo(field.key);
+        respondWithVoice(field.question);
+        return;
+      }
+    }
+
+    completeBookingProcess();
+  };
+
+  const askAgainForInfo = (infoType: string, message: string) => {
+    setWaitingForInfo(infoType);
+    respondWithVoice(message);
+  };
+
+  const completeBookingProcess = () => {
+    const summary = `عالی! اطلاعات شما کامل شد:
+    مبدأ: ${bookingInfo.origin}
+    مقصد: ${bookingInfo.destination}
+    تاریخ: ${bookingInfo.departureDate}
+    تعداد مسافر: ${bookingInfo.passengers}
+    نام مسافر: ${bookingInfo.passengerName}
+    
+    اکنون فرم رزرو را برایتان باز می‌کنم.`;
+
+    respondWithVoice(summary);
+    
+    setTimeout(() => {
+      onBookingRequest();
+    }, 3000);
   };
 
   const processUserRequest = (userInput: string) => {
     let response = '';
     
-    // تشخیص قصد کاربر
     const lowerInput = userInput.toLowerCase();
     
     if (lowerInput.includes('بلیط') || lowerInput.includes('رزرو') || lowerInput.includes('پرواز')) {
-      response = 'عالی! می‌خواهید بلیط هواپیما رزرو کنید. لطفاً منتظر باشید تا فرم رزرو را برایتان باز کنم.';
+      response = 'عالی! می‌خواهید بلیط هواپیما رزرو کنید. برای شروع، ';
+      setBookingInfo({});
       setTimeout(() => {
-        onBookingRequest();
-      }, 2000);
+        askForNextRequiredInfo();
+      }, 1500);
     } else if (lowerInput.includes('سلام') || lowerInput.includes('درود')) {
       response = 'سلام و درود! خوش آمدید. چطور می‌توانم به شما کمک کنم؟ آیا می‌خواهید بلیط هواپیما رزرو کنید؟';
     } else if (lowerInput.includes('کمک')) {
-      response = 'البته! من می‌توانم به شما در موارد زیر کمک کنم: رزرو بلیط هواپیما، جستجوی پرواز، اطلاعات قیمت و مقایسه پروازها. چه کاری برایتان انجام دهم؟';
-    } else if (lowerInput.includes('قیمت')) {
-      response = 'برای اطلاع از قیمت بلیط، لطفاً مبدأ و مقصد و تاریخ سفر خود را مشخص کنید. می‌توانم بهترین قیمت‌ها را برایتان پیدا کنم.';
+      response = 'البته! من می‌توانم به شما در رزرو بلیط هواپیما کمک کنم. برای شروع نیاز دارم که اطلاعات پرواز شما را بدانم. آیا آماده‌اید؟';
     } else {
       response = 'متوجه نشدم. می‌توانید سوال خود را واضح‌تر بپرسید؟ یا اگر می‌خواهید بلیط رزرو کنید، همین الان شروع کنیم.';
     }
 
-    // پاسخ دستیار
+    if (response) {
+      respondWithVoice(response);
+    }
+  };
+
+  const respondWithVoice = (text: string) => {
     const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
+      id: (Date.now() + Math.random()).toString(),
       type: 'assistant',
-      content: response,
+      content: text,
       timestamp: new Date()
     };
 
     setTimeout(() => {
       setMessages(prev => [...prev, assistantMessage]);
-      speakResponse(response);
+      speakResponse(text);
     }, 1000);
   };
 
   const speakResponse = (text: string) => {
     if ('speechSynthesis' in window && isPlaying) {
-      // توقف صداهای قبلی
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
@@ -208,6 +327,17 @@ const VoiceChat: React.FC<VoiceChatProps> = ({
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                   <span className="text-sm">در حال گوش دادن...</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {waitingForInfo && (
+            <div className="flex justify-start">
+              <div className="bg-yellow-600 text-white px-4 py-2 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <span className="text-sm">منتظر پاسخ شما...</span>
                 </div>
               </div>
             </div>
