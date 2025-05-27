@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,9 +49,9 @@ const SpeechToVideo = () => {
         setIsListening(false);
       };
 
-      recognitionRef.current.onend = () => {
+      recognitionRef.current.addEventListener('end', () => {
         setIsListening(false);
-      };
+      });
     } else {
       toast({
         title: "عدم پشتیبانی",
